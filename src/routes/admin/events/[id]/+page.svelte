@@ -89,7 +89,7 @@
       body: JSON.stringify({ status: selStatus })
     });
     updStatus = false;
-    if (r.ok) { showToast('Status updated'); goto(`/events/${ev.id}`, { invalidateAll: true }); }
+    if (r.ok) { showToast('Status updated'); goto(`/admin/events/${ev.id}`, { invalidateAll: true }); }
     else showToast('Update failed', false);
   }
 
@@ -102,7 +102,7 @@
     fd.append('file', f); fd.append('event_id', String(ev.id)); fd.append('type', 'agreement');
     const r = await fetch('/api/upload', { method: 'POST', body: fd });
     uploadingPDF = false;
-    if (r.ok) { showToast('Agreement uploaded'); goto(`/events/${ev.id}`, { invalidateAll: true }); }
+    if (r.ok) { showToast('Agreement uploaded'); goto(`/admin/events/${ev.id}`, { invalidateAll: true }); }
     else showToast('Upload failed', false);
   }
 
@@ -138,8 +138,8 @@
 <div class="topbar">
   <div class="topbar-title">{ev.groom_name} &amp; {ev.bride_name}</div>
   <div class="topbar-right">
-    <a href="/events/{ev.id}/edit" class="btn btn-secondary">Edit</a>
-    <a href="/events" class="btn btn-ghost">
+    <a href="/admin/events/{ev.id}/edit" class="btn btn-secondary">Edit</a>
+    <a href="/admin/events" class="btn btn-ghost">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px"><polyline points="15 18 9 12 15 6"/></svg>
       Back
     </a>

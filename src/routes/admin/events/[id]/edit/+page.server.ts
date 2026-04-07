@@ -43,6 +43,6 @@ export const actions: Actions = {
       storage_disk_number=?,backup_disk_number=?,notes=? WHERE id=?`,
       [groom,bride,phone,bdate,edate,eloc || null,categoriesStr,status,total,pre,fps,disk,bkp,notes,id]);
 
-    throw redirect(302, `/events/${id}`);
+    throw redirect(302, `/admin/events/${id}`);
   }
 };

@@ -24,11 +24,11 @@
     const q = new URLSearchParams();
     if (search.trim())  q.set('search', search.trim());
     if (filterStatus)   q.set('status', filterStatus);
-    goto(`/events${q.toString() ? '?' + q : ''}`, { replaceState: true, invalidateAll: true });
+    goto(`/admin/events${q.toString() ? '?' + q : ''}`, { replaceState: true, invalidateAll: true });
   }
   function onSearchInput() { clearTimeout(searchTimer); searchTimer = setTimeout(applyFilters, 380); }
   function onStatusFilterChange() { applyFilters(); }
-  function clearFilters() { search = ''; filterStatus = ''; goto('/events', { replaceState: true, invalidateAll: true }); }
+  function clearFilters() { search = ''; filterStatus = ''; goto('/admin/events', { replaceState: true, invalidateAll: true }); }
 
   /* ── Status dropdown per-status rules ───────── */
   function getStatusOptions(current: string): string[] {
@@ -67,7 +67,7 @@
       body: JSON.stringify({ status: confirmChange.newStatus })
     });
     saving = false;
-    if (r.ok) { showToast('Status updated'); confirmChange = null; goto('/events', { invalidateAll: true }); }
+    if (r.ok) { showToast('Status updated'); confirmChange = null; goto('/admin/events', { invalidateAll: true }); }
     else showToast('Failed to update', false);
   }
 
@@ -77,7 +77,7 @@
     deleting = true;
     const r = await fetch(`/api/events/${delId}`, { method: 'DELETE' });
     deleting = false;
-    if (r.ok) { showToast('Event deleted'); delId = null; goto('/events', { invalidateAll: true }); }
+    if (r.ok) { showToast('Event deleted'); delId = null; goto('/admin/events', { invalidateAll: true }); }
     else showToast('Delete failed', false);
   }
 
@@ -132,7 +132,7 @@
     <span style="font-size:13px;font-weight:400;color:var(--ink-3);margin-left:8px">{data.events.length} results</span>
   </div>
   <div class="topbar-right">
-    <a href="/events/new" class="btn btn-primary">
+    <a href="/admin/events/new" class="btn btn-primary">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       New Event
     </a>
@@ -177,7 +177,7 @@
         </svg>
         <h3>No events found</h3>
         <p>Try a different search or add a new booking.</p>
-        <a href="/events/new" class="btn btn-primary" style="margin-top:16px">New Event</a>
+        <a href="/admin/events/new" class="btn btn-primary" style="margin-top:16px">New Event</a>
       </div>
     </div>
   {:else}
@@ -262,12 +262,12 @@
               <!-- Actions -->
               <td>
                 <div class="actions">
-                  <a href="/events/{ev.id}" class="btn btn-ghost btn-icon" title="View">
+                  <a href="/admin/events/{ev.id}" class="btn btn-ghost btn-icon" title="View">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
                     </svg>
                   </a>
-                  <a href="/events/{ev.id}/edit" class="btn btn-ghost btn-icon" title="Edit">
+                  <a href="/admin/events/{ev.id}/edit" class="btn btn-ghost btn-icon" title="Edit">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>

@@ -4,7 +4,7 @@ import { query } from '$lib/server/db';
 import { comparePassword, signToken } from '$lib/server/auth';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	if (locals.user) throw redirect(302, '/dashboard');
+	if (locals.user) throw redirect(302, '/admin/dashboard');
 	return {};
 };
 
@@ -43,6 +43,6 @@ export const actions: Actions = {
 			maxAge: 60 * 60 * 24 * 7 // 7 days
 		});
 
-		throw redirect(302, '/dashboard');
+		throw redirect(302, '/admin/dashboard');
 	}
 };

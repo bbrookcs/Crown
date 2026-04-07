@@ -33,7 +33,7 @@
     <div class="topbar-title">Dashboard</div>
   </div>
   <div class="topbar-right">
-    <a href="/events/new" class="btn btn-primary">
+    <a href="/admin/events/new" class="btn btn-primary">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       New Event
     </a>
@@ -93,7 +93,7 @@
     <div class="table-wrap">
       <div style="padding:14px 18px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
         <span style="font-size:13px;font-weight:700;letter-spacing:-0.02em">Recent Events</span>
-        <a href="/events" class="btn btn-ghost btn-sm">View all</a>
+        <a href="/admin/events" class="btn btn-ghost btn-sm">View all</a>
       </div>
 
       {#if recent.length === 0}
@@ -101,7 +101,7 @@
           <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <h3>No events yet</h3>
           <p>Create your first wedding booking.</p>
-          <a href="/events/new" class="btn btn-primary" style="margin-top:14px">New Event</a>
+          <a href="/admin/events/new" class="btn btn-primary" style="margin-top:14px">New Event</a>
         </div>
       {:else}
         <table>
@@ -113,7 +113,7 @@
           </thead>
           <tbody>
             {#each recent as ev}
-              <tr onclick={() => window.location.href=`/events/${ev.id}`} style="cursor:pointer">
+              <tr onclick={() => window.location.href=`/admin/events/${ev.id}`} style="cursor:pointer">
                 <td style="font-weight:600">{ev.groom_name} & {ev.bride_name}</td>
                 <td style="color:var(--ink-2)">{fmtDate(ev.event_date)}</td>
                 <td><span class="badge {statusClass[ev.status]}">{ev.status}</span></td>

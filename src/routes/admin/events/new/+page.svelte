@@ -171,7 +171,7 @@
       await fetch('/api/upload', { method: 'POST', body: fd });
     }
 
-    goto(`/events/${id}`);
+    goto(`/admin/events/${id}`);
   }
 </script>
 
@@ -180,7 +180,7 @@
 <div class="topbar">
   <div class="topbar-title">New Booking</div>
   <div class="topbar-right">
-    <a href="/events" class="btn btn-ghost">
+    <a href="/admin/events" class="btn btn-ghost">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px"><polyline points="15 18 9 12 15 6"/></svg>
       Cancel
     </a>
@@ -476,7 +476,7 @@
 
     <!-- Actions -->
     <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:4px">
-      <a href="/events" class="btn btn-secondary">Cancel</a>
+      <a href="/admin/events" class="btn btn-secondary">Cancel</a>
       <button class="btn btn-primary" onclick={submit} disabled={loading}>
         {#if loading}<span class="spin"></span>{/if}
         {loading ? 'Creating…' : 'Create Booking'}

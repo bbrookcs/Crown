@@ -103,7 +103,7 @@
 <div class="topbar">
   <div class="topbar-title">Edit Booking</div>
   <div class="topbar-right">
-    <a href="/events/{ev.id}" class="btn btn-ghost">
+    <a href="/admin/events/{ev.id}" class="btn btn-ghost">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px"><polyline points="15 18 9 12 15 6"/></svg>
       Cancel
     </a>
@@ -279,7 +279,7 @@
       </div>
 
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:4px">
-        <a href="/events/{ev.id}" class="btn btn-secondary">Cancel</a>
+        <a href="/admin/events/{ev.id}" class="btn btn-secondary">Cancel</a>
         <button type="submit" class="btn btn-primary" disabled={loading}>
           {#if loading}<span class="spin"></span>{/if}
           {loading ? 'Saving…' : 'Save Changes'}
