@@ -1,5 +1,5 @@
 import type { Handle } from '@sveltejs/kit';
-import { initializeDatabase } from '$lib/server/db';
+import { initializeDatabase, query } from '$lib/server/db';
 import { getUser } from '$lib/server/auth';
 import { redirect } from '@sveltejs/kit';
 
@@ -15,7 +15,20 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	const user = getUser(event);
+	let user = getUser(event);
+
+	// Validate against DB to ensure they still exist
+	if (user) {
+		const rows = await query<any[]>('SELECT id, role FROM users WHERE id = ? LIMIT 1', [user.userId]);
+		if (!rows || rows.length === 0) {
+			user = null;
+			event.cookies.delete('auth_token', { path: '/' });
+		} else {
+		    // Optionally sync up-to-date role if changed
+			user.role = rows[0].role;
+		}
+	}
+
 	event.locals.user = user;
 
 	const path = event.url.pathname;
@@ -27,7 +40,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	if (isAuthRoute && user) {
-		throw redirect(302, '/dashboard');
+		throw redirect(302, '/admin/dashboard');
 	}
 
 	return resolve(event);
