@@ -11,7 +11,7 @@
       <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>
     </svg>
     <h1>Crown Wedding Films</h1>
-    <p>We are coming soon. Stay tuned to capture your most magical moments in cinematic brilliance.</p>
+    <p>Coming soon. Stay tuned to capture your most magical moments in cinematic brilliance.</p>
    
   </div>
 </div>
