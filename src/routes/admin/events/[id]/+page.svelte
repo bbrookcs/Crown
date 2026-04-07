@@ -1,7 +1,9 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
 
   let { data }: { data: any } = $props();
+  const isAdmin = $derived($page.data.user?.role === 'admin');
   const ev     = data.event;
   let receipts = $state([...data.receipts]);
 
@@ -138,7 +140,9 @@
 <div class="topbar">
   <div class="topbar-title">{ev.groom_name} &amp; {ev.bride_name}</div>
   <div class="topbar-right">
-    <a href="/admin/events/{ev.id}/edit" class="btn btn-secondary">Edit</a>
+    {#if isAdmin}
+      <a href="/admin/events/{ev.id}/edit" class="btn btn-secondary">Edit</a>
+    {/if}
     <a href="/admin/events" class="btn btn-ghost">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px"><polyline points="15 18 9 12 15 6"/></svg>
       Back
@@ -192,9 +196,9 @@
           
           {#if !hasCategories}
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
-              <div><div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-3);margin-bottom:3px">Event Date</div><div style="font-size:14.5px;font-weight:500;color:var(--ink)">{fmtDate(ev.event_date)}</div></div>
-              <div><div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-3);margin-bottom:3px">Event Location</div><div style="font-size:14.5px;font-weight:500;color:{ev.event_location?'var(--ink)':'var(--ink-3)'}">{ev.event_location || '—'}</div></div>
-              <div><div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-3);margin-bottom:3px">Booking Date</div><div style="font-size:14.5px;font-weight:500;color:var(--ink)">{fmtDate(ev.booking_date)}</div></div>
+              <div><div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-2);margin-bottom:3px">Event Date</div><div style="font-size:14.5px;font-weight:500;color:var(--ink)">{fmtDate(ev.event_date)}</div></div>
+              <div><div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-2);margin-bottom:3px">Event Location</div><div style="font-size:14.5px;font-weight:500;color:{ev.event_location?'var(--ink)':'var(--ink-3)'}">{ev.event_location || '—'}</div></div>
+              <div><div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-2);margin-bottom:3px">Booking Date</div><div style="font-size:14.5px;font-weight:500;color:var(--ink)">{fmtDate(ev.booking_date)}</div></div>
             </div>
           {:else}
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
@@ -214,7 +218,12 @@
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--blue);margin-bottom:10px">Crew</div>
             <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px">
               {#each crewObj as c}
-                <span class="badge" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--border-md)">{c}</span>
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 12px 3px 3px;background:var(--surface-2);border:1px solid var(--border-md);border-radius:var(--r-full);">
+                  <div style="width:22px;height:22px;border-radius:50%;background:var(--blue-tint);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;">
+                    {c.split(' ').map((n: string)=>n[0]).join('').slice(0,2).toUpperCase()}
+                  </div>
+                  <span style="font-size:12.5px;font-weight:500;color:var(--ink-2)">{c}</span>
+                </div>
               {/each}
             </div>
           {/if}

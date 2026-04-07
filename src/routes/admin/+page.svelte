@@ -1,7 +1,1 @@
-<script lang="ts">
-   import { onMount } from "svelte";
-   
-   onMount(() => {
-      window.location.href = '/admin/dashboard';
-   })
-</script>
+<!-- Redirected via +page.server.ts -->

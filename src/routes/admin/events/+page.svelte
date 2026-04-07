@@ -1,8 +1,10 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
+  const isAdmin = $derived($page.data.user?.role === 'admin');
 
   let search       = $state(data.search  || '');
   let filterStatus = $state(data.status  || '');
@@ -132,10 +134,12 @@
     <span style="font-size:13px;font-weight:400;color:var(--ink-3);margin-left:8px">{data.events.length} results</span>
   </div>
   <div class="topbar-right">
+    {#if isAdmin}
     <a href="/admin/events/new" class="btn btn-primary">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       New Event
     </a>
+    {/if}
   </div>
 </div>
 
@@ -177,7 +181,9 @@
         </svg>
         <h3>No events found</h3>
         <p>Try a different search or add a new booking.</p>
-        <a href="/admin/events/new" class="btn btn-primary" style="margin-top:16px">New Event</a>
+        {#if isAdmin}
+          <a href="/admin/events/new" class="btn btn-primary" style="margin-top:16px">New Event</a>
+        {/if}
       </div>
     </div>
   {:else}
@@ -267,6 +273,7 @@
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
                     </svg>
                   </a>
+                  {#if isAdmin}
                   <a href="/admin/events/{ev.id}/edit" class="btn btn-ghost btn-icon" title="Edit">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -279,6 +286,7 @@
                       <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
                     </svg>
                   </button>
+                  {/if}
                 </div>
               </td>
             </tr>

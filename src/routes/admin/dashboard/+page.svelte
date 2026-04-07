@@ -22,7 +22,6 @@
     { label:'In Editing',         value: stats.editing,   sub:'Currently being edited', color:'rgba(255,149,0,0.09)',   tc:'#FF9500' },
     { label:'Delivered',          value: stats.delivered, sub:'Successfully delivered', color:'rgba(52,199,89,0.09)',   tc:'#34C759' },
     { label:'File Selection',   value: stats.selection, sub:'Awaiting client review', color:'rgba(88,86,214,0.08)',   tc:'#5856D6' },
-    { label:'Pending Payments',   value: stats.unpaid,    sub:'Delivered & unpaid',      color:'rgba(255,59,48,0.08)',   tc:'#FF3B30' },
   ]);
 </script>
 

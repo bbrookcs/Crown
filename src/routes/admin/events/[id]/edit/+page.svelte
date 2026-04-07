@@ -6,7 +6,14 @@
   const ev = data.event;
 
   let total = $state(Number(ev.total_price) || 0);
-  let pre   = $state(Number(ev.prepayment)  || 0);
+  let prepayment_pct = $state(total ? Math.round((Number(ev.prepayment) / total) * 100) : 50);
+  if (![25, 50, 75].includes(prepayment_pct)) {
+    // If it's a weird custom percentage, round to nearest default or just keep it
+    const diffs = [25, 50, 75].map(v => Math.abs(prepayment_pct - v));
+    const minDiff = Math.min(...diffs);
+    if (minDiff < 5) prepayment_pct = [25, 50, 75][diffs.indexOf(minDiff)];
+  }
+  const pre = $derived((total * prepayment_pct) / 100);
   const rem = $derived(total - pre);
 
   function toDateStr(d: any): string {
@@ -96,6 +103,13 @@
     packedCats = builtCats.length ? JSON.stringify(builtCats) : '';
   }
 
+  // Crew Setup
+  let initialCrew = typeof ev.crew === 'string' ? (JSON.parse(ev.crew || '[]') || []) : (ev.crew || []);
+  if (!Array.isArray(initialCrew) || initialCrew.length === 0) initialCrew = [''];
+  let crew: string[] = $state(initialCrew);
+  function addCrew() { crew = [...crew, '']; }
+  function removeCrew(i: number) { crew = crew.filter((_, idx) => idx !== i); }
+
 </script>
 
 <svelte:head><title>Edit — {ev.groom_name} & {ev.bride_name}</title></svelte:head>
@@ -120,11 +134,17 @@
       </div>
     {/if}
 
-    <form method="POST" use:enhance={() => { loading = true; prepareSubmit(); return async ({ update }) => { loading = false; await update(); }; }}>
-      
-      <input type="hidden" name="event_date" value={finalEvDate} />
-      <input type="hidden" name="event_location" value={finalEvLoc} />
-      <input type="hidden" name="categories" value={packedCats} />
+    <form method="POST" use:enhance={({ formData }) => { 
+      loading = true; 
+      prepareSubmit(); 
+      formData.set('event_date', finalEvDate);
+      formData.set('event_location', finalEvLoc);
+      formData.set('categories', packedCats);
+      formData.set('prepayment', String(pre));
+      const activeCrew = crew.filter(c => c.trim());
+      formData.set('crew', activeCrew.length ? JSON.stringify(activeCrew) : '');
+      return async ({ update }) => { loading = false; await update(); }; 
+    }}>
 
       <!-- Client -->
       <div class="section-card">
@@ -252,19 +272,62 @@
             </div>
             <div class="form-group">
               <label class="form-label" for="pr">Prepayment</label>
-              <input id="pr" name="prepayment" type="number" class="input" step="0.01" min="0" bind:value={pre} />
+              <select id="pr" class="select" bind:value={prepayment_pct}>
+                <option value={25}>25%</option>
+                <option value={50}>50%</option>
+                <option value={75}>75%</option>
+                {#if ![25, 50, 75].includes(prepayment_pct)}
+                  <option value={prepayment_pct}>Custom ({prepayment_pct}%)</option>
+                {/if}
+              </select>
             </div>
             <div class="form-group col-span-2">
-              <label class="form-label">Remaining (auto-calculated)</label>
-              <div class="input" style="cursor:default;font-weight:700;color:{rem > 0 ? 'var(--red)' : 'var(--green)'}">
-                {rem.toFixed(2)}
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                <label class="form-label" style="margin-bottom:0">Amount Breakdown</label>
+              </div>
+              <div class="input" style="cursor:default;display:flex;align-items:center;gap:12px;padding:9px 13px;background:var(--surface-2)">
+                <div style="flex:1">
+                  <div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.05em;font-weight:600">Prepayment</div>
+                  <div style="font-size:14px;font-weight:600;color:var(--ink)">{pre.toLocaleString('en-US')}</div>
+                </div>
+                <div style="width:1px;height:30px;background:var(--border-md)"></div>
+                <div style="flex:1">
+                  <div style="font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.05em;font-weight:600">Remaining</div>
+                  <div style="font-size:14px;font-weight:600;color:{rem > 0 ? 'var(--red)' : 'var(--green)'}">{rem.toLocaleString('en-US')}</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-     
+      <!-- Crew Section -->
+      <div class="section-card">
+        <div class="section-head" style="background:#E0E0E8;border-left:3px solid var(--blue)">
+          <span class="section-title" style="color:var(--ink)">Crew</span>
+        </div>
+        <div class="section-body">
+          <div style="margin-bottom:20px">
+            <label class="form-label" style="margin-bottom:6px;display:block">Assigned Crew Members</label>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              {#each crew as c, i}
+                <div style="display:flex;gap:7px;align-items:center">
+                  <input type="text" class="input" placeholder="Crew member name" bind:value={crew[i]} />
+                  {#if i === 0}
+                    <button type="button" onclick={addCrew} title="Add another crew member" style="flex-shrink:0;width:36px;height:36px;border-radius:var(--r-md);border:1.5px solid var(--border-md);background:var(--surface);color:var(--blue);cursor:pointer;display:flex;align-items:center;justify-content:center">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </button>
+                  {:else}
+                    <button type="button" onclick={() => removeCrew(i)} title="Remove" style="flex-shrink:0;width:36px;height:36px;border-radius:var(--r-md);border:1.5px solid var(--border-md);background:var(--red-tint);color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:14px;height:14px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  {/if}
+                </div>
+              {/each}
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Notes -->
       <div class="section-card">

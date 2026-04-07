@@ -33,6 +33,7 @@ export const actions: Actions = {
     const disk   = get('storage_disk_number')     || null;
     const bkp    = get('backup_disk_number')      || null;
     const notes  = get('notes')                   || null;
+    const crewStr= get('crew')                    || null;
 
     if (!groom || !bride || !phone || !bdate || !edate)
       return fail(400, { error: 'Please fill all required fields.' });
@@ -40,8 +41,8 @@ export const actions: Actions = {
     await query(`UPDATE events SET
       groom_name=?,bride_name=?,phone=?,booking_date=?,event_date=?,event_location=?,categories=?,status=?,
       total_price=?,prepayment=?,final_payment_status=?,
-      storage_disk_number=?,backup_disk_number=?,notes=? WHERE id=?`,
-      [groom,bride,phone,bdate,edate,eloc || null,categoriesStr,status,total,pre,fps,disk,bkp,notes,id]);
+      storage_disk_number=?,backup_disk_number=?,notes=?,crew=? WHERE id=?`,
+      [groom,bride,phone,bdate,edate,eloc || null,categoriesStr,status,total,pre,fps,disk,bkp,notes,crewStr,id]);
 
     throw redirect(302, `/admin/events/${id}`);
   }
