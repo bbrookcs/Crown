@@ -5,14 +5,14 @@ import { requireAuth } from '$lib/server/auth';
 export const load: PageServerLoad = async (event) => {
   requireAuth(event);
 
-  await query(`UPDATE events SET status='Client Selection'
+  await query(`UPDATE events SET status='File Selection'
     WHERE status='Pending' AND event_date < CURDATE()`);
 
   const [rows] = await Promise.all([
     query<any[]>(`SELECT
       COUNT(*) as total,
       SUM(status='Pending') as pending,
-      SUM(status='Client Selection') as selection,
+      SUM(status='File Selection') as selection,
       SUM(status='Editing') as editing,
       SUM(status='Delivered') as delivered,
       SUM(final_payment_status='Unpaid' AND status='Delivered') as unpaid_delivered,

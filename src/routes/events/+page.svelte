@@ -33,9 +33,9 @@
   /* ── Status dropdown per-status rules ───────── */
   function getStatusOptions(current: string): string[] {
     if (current === 'Delivered')        return [];  // no change allowed
-    if (current === 'Client Selection') return ['Editing', 'Delivered'];
-    if (current === 'Editing')          return ['Client Selection', 'Delivered'];
-    return ['Client Selection', 'Editing', 'Delivered']; // Pending
+    if (current === 'File Selection') return ['Editing', 'Delivered'];
+    if (current === 'Editing')          return ['File Selection', 'Delivered'];
+    return ['File Selection', 'Editing', 'Delivered']; // Pending
   }
 
   function openStatusDropdown(ev: any, e: MouseEvent) {
@@ -85,7 +85,7 @@
 
   /* ── Helpers ────────────────────────────────── */
   const statusClass: Record<string, string> = {
-    'Pending': 'badge-pending', 'Client Selection': 'badge-selection',
+    'Pending': 'badge-pending', 'File Selection': 'badge-selection',
     'Editing': 'badge-editing', 'Delivered': 'badge-delivered'
   };
   const fmtNum  = (n: number) => n != null ? new Intl.NumberFormat('en-US', { minimumFractionDigits: 0 }).format(n) : '—';
@@ -153,7 +153,7 @@
 
       <select class="select" style="width:190px" bind:value={filterStatus} onchange={onStatusFilterChange}>
         <option value="">All Statuses</option>
-        {#each ['Pending','Client Selection','Editing','Delivered'] as s}
+        {#each ['Pending','File Selection','Editing','Delivered'] as s}
           <option value={s}>{s}</option>
         {/each}
       </select>
@@ -187,10 +187,12 @@
           <tr>
             <th>#</th>
             <th>Couple</th>
+            <th>Category</th>
             <th>Wedding Date</th>
             <th>Status</th>
-            <th>Total</th>
+            <th>Total Payment</th>
             <th>Remaining</th>
+            <th>Storage</th>
             <th></th>
           </tr>
         </thead>
@@ -198,6 +200,8 @@
           {#each data.events as ev, i}
             {@const isDelivered = ev.status === 'Delivered'}
             {@const opts = getStatusOptions(ev.status)}
+            {@const catObj = typeof ev.categories === 'string' ? (JSON.parse(ev.categories || '[]') || []) : (ev.categories || [])}
+            {@const catNames = Array.isArray(catObj) ? catObj.map((c: any) => typeof c === 'string' ? c : c.name).join(', ') : ''}
             <tr>
               <td style="color:var(--ink-3);font-size:12px;width:36px">{i + 1}</td>
 
@@ -207,13 +211,18 @@
                 <div style="font-size:12px;color:var(--ink-3);margin-top:1px">{ev.phone}</div>
               </td>
 
+              <!-- Category -->
+              <td style="color:var(--ink-2);max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title={catNames}>
+                {catNames || '—'}
+              </td>
+
               <!-- Date -->
               <td style="color:var(--ink-2);white-space:nowrap">{fmtDate(ev.event_date)}</td>
 
-              <!-- Status — clickable if not Delivered -->
+              <!-- Status — clickable if not Delivered or Pending -->
               <td>
-                {#if isDelivered}
-                  <!-- Delivered: just a static badge, no dropdown -->
+                {#if isDelivered || ev.status === 'Pending'}
+                  <!-- Delivered or Pending: just a static badge, no dropdown -->
                   <span class="badge badge-delivered">{ev.status}</span>
                 {:else}
                   <button
@@ -239,10 +248,15 @@
                 {#if !isDelivered}
                   <span style="color:{Number(ev.remaining_amount) > 0 ? 'var(--red)' : 'var(--green)'}">
                     {fmtNum(ev.remaining_amount)}
-                  </span>
+                   </span>
                 {:else}
                   <span style="color:var(--ink-3)">—</span>
                 {/if}
+              </td>
+
+              <!-- Storage -->
+              <td style="color:var(--ink-2);white-space:nowrap">
+                {ev.storage_disk_number || '—'}
               </td>
 
               <!-- Actions -->

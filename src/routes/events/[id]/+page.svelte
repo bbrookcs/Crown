@@ -5,11 +5,39 @@
   const ev     = data.event;
   let receipts = $state([...data.receipts]);
 
+  const catObj = typeof ev.categories === 'string' ? (JSON.parse(ev.categories || '[]') || []) : (ev.categories || []);
+  const hasCategories = Array.isArray(catObj) && catObj.length > 0;
+  const crewObj = typeof ev.crew === 'string' ? (JSON.parse(ev.crew || '[]') || []) : (ev.crew || []);
+
   // Status
   let selStatus = $state(ev.status);
   let updStatus = $state(false);
 
-  // Uploads
+  // Storage Editing
+  let editingStorage = $state(false);
+  let editStorageVal = $state(ev.storage_disk_number || '');
+  let editBackupVal = $state(ev.backup_disk_number || '');
+  let savingStorage = $state(false);
+
+  async function saveStorage() {
+    savingStorage = true;
+    const r = await fetch(`/api/events/${ev.id}/storage`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ storage_disk_number: editStorageVal, backup_disk_number: editBackupVal })
+    });
+    savingStorage = false;
+    if (r.ok) {
+      ev.storage_disk_number = editStorageVal;
+      ev.backup_disk_number = editBackupVal;
+      editingStorage = false;
+      showToast('Storage updated');
+    } else {
+      showToast('Update failed', false);
+    }
+  }
+
+  // Upload state
   let uploadingPDF = $state(false);
   let recFile: File | null = $state(null);
   let recType = $state('');
@@ -44,7 +72,7 @@
   }
 
   const statusClass: Record<string, string> = {
-    'Pending': 'badge-pending', 'Client Selection': 'badge-selection',
+    'Pending': 'badge-pending', 'File Selection': 'badge-selection',
     'Editing': 'badge-editing', 'Delivered': 'badge-delivered'
   };
 
@@ -119,7 +147,7 @@
 </div>
 
 <div class="page">
-  <div style="max-width:{allUploaded ? '760px' : '1080px'};margin:0 auto;transition:max-width 300ms">
+  <div style="max-width:760px;margin:0 auto;transition:max-width 300ms">
 
     <!-- Status bar -->
     <div class="card" style="padding:13px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
@@ -129,7 +157,7 @@
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <select class="select" style="width:200px" bind:value={selStatus}>
-          {#each ['Pending','Client Selection','Editing','Delivered'] as s}
+          {#each ['Pending','File Selection','Editing','Delivered'] as s}
             <option value={s}>{s}</option>
           {/each}
         </select>
@@ -139,10 +167,10 @@
       </div>
     </div>
 
-    <!-- Main grid — full width when all uploaded, 2-col otherwise -->
-    <div style="display:grid;grid-template-columns:{allUploaded ? '1fr' : '1.5fr 1fr'};gap:20px;align-items:start">
+    <!-- Main single column constraint -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
 
-      <!-- ════ LEFT — ALL INFO ════ -->
+      <!-- ════ ALL INFO ════ -->
       <div class="section-card" style="margin-bottom:0">
         <div class="section-head">
           <span class="section-title">Booking Information</span>
@@ -161,10 +189,35 @@
 
           <!-- EVENT DATES -->
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--blue);margin-bottom:10px">Event</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
-            <div><div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-3);margin-bottom:3px">Wedding Date</div><div style="font-size:14.5px;font-weight:500;color:var(--ink)">{fmtDate(ev.event_date)}</div></div>
-            <div><div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-3);margin-bottom:3px">Booking Date</div><div style="font-size:14.5px;font-weight:500;color:var(--ink)">{fmtDate(ev.booking_date)}</div></div>
-          </div>
+          
+          {#if !hasCategories}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+              <div><div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-3);margin-bottom:3px">Event Date</div><div style="font-size:14.5px;font-weight:500;color:var(--ink)">{fmtDate(ev.event_date)}</div></div>
+              <div><div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-3);margin-bottom:3px">Event Location</div><div style="font-size:14.5px;font-weight:500;color:{ev.event_location?'var(--ink)':'var(--ink-3)'}">{ev.event_location || '—'}</div></div>
+              <div><div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-3);margin-bottom:3px">Booking Date</div><div style="font-size:14.5px;font-weight:500;color:var(--ink)">{fmtDate(ev.booking_date)}</div></div>
+            </div>
+          {:else}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+              <div><div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-3);margin-bottom:3px">Booking Date</div><div style="font-size:14.5px;font-weight:500;color:var(--ink)">{fmtDate(ev.booking_date)}</div></div>
+            </div>
+            {#each catObj as cat}
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed var(--border)">
+                <div><div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-3);margin-bottom:3px">{typeof cat === 'string' ? cat : cat.name} Date</div><div style="font-size:14.5px;font-weight:500;color:{cat.date?'var(--ink)':'var(--ink-3)'}">{cat.date ? fmtDate(cat.date) : '—'}</div></div>
+                <div><div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-3);margin-bottom:3px">{typeof cat === 'string' ? cat : cat.name} Location</div><div style="font-size:14.5px;font-weight:500;color:{cat.location?'var(--ink)':'var(--ink-3)'}">{cat.location || '—'}</div></div>
+              </div>
+            {/each}
+            <div style="margin-bottom:8px"></div>
+          {/if}
+
+          {#if crewObj.length > 0}
+            <hr class="divider" />
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--blue);margin-bottom:10px">Crew</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px">
+              {#each crewObj as c}
+                <span class="badge" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--border-md)">{c}</span>
+              {/each}
+            </div>
+          {/if}
 
           <hr class="divider" />
 
@@ -181,12 +234,35 @@
 
           <hr class="divider" />
 
-          <!-- STORAGE read-only -->
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--blue);margin-bottom:10px">Storage Disks</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
-            <div><div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-3);margin-bottom:3px">File Save Disk</div><div style="font-size:14.5px;font-weight:500;color:{ev.storage_disk_number?'var(--ink)':'var(--ink-3)'}">{ev.storage_disk_number || '—'}</div></div>
-            <div><div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-3);margin-bottom:3px">Backup Disk</div><div style="font-size:14.5px;font-weight:500;color:{ev.backup_disk_number?'var(--ink)':'var(--ink-3)'}">{ev.backup_disk_number || '—'}</div></div>
+          <!-- STORAGE -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--blue)">Storage Disks</div>
+            {#if !editingStorage}
+              <button class="btn btn-ghost btn-sm" style="height:24px;padding:0 8px;font-size:11px" onclick={() => editingStorage = true}>Edit</button>
+            {/if}
           </div>
+          
+          {#if editingStorage}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;background:var(--surface-2);padding:12px;border-radius:var(--r-md);border:1px solid var(--border)">
+              <div>
+                <label class="form-label" style="font-size:10px">File Save Disk</label>
+                <input type="text" class="input" style="padding:6px 10px;font-size:13px" bind:value={editStorageVal} placeholder="e.g. HDD-01" />
+              </div>
+              <div>
+                <label class="form-label" style="font-size:10px">Backup Disk</label>
+                <input type="text" class="input" style="padding:6px 10px;font-size:13px" bind:value={editBackupVal} placeholder="e.g. BKP-01" />
+              </div>
+              <div style="grid-column:1/-1;display:flex;justify-content:flex-end;gap:6px">
+                <button class="btn btn-ghost btn-sm" onclick={() => editingStorage = false}>Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick={saveStorage} disabled={savingStorage}>{savingStorage ? 'Saving...' : 'Save'}</button>
+              </div>
+            </div>
+          {:else}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+              <div><div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-3);margin-bottom:3px">File Save Disk</div><div style="font-size:14.5px;font-weight:500;color:{ev.storage_disk_number?'var(--ink)':'var(--ink-3)'}">{ev.storage_disk_number || '—'}</div></div>
+              <div><div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-3);margin-bottom:3px">Backup Disk</div><div style="font-size:14.5px;font-weight:500;color:{ev.backup_disk_number?'var(--ink)':'var(--ink-3)'}">{ev.backup_disk_number || '—'}</div></div>
+            </div>
+          {/if}
 
           {#if ev.notes}
             <hr class="divider" />
@@ -246,9 +322,9 @@
         </div>
       </div>
 
-      <!-- ════ RIGHT — UPLOADS (hidden when all done) ════ -->
+      <!-- ════ BOTTOM — UPLOADS (hidden when all done) ════ -->
       {#if !allUploaded}
-        <div style="display:flex;flex-direction:column;gap:16px;position:sticky;top:calc(var(--topbar-h) + 20px)">
+        <div style="display:flex;flex-direction:column;gap:16px;">
 
           <!-- PDF Upload -->
           {#if showPDFUpload}

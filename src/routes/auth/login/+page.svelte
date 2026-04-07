@@ -29,7 +29,7 @@
 
       <div class="form-group">
         <label class="form-label" for="email">Email</label>
-        <input id="email" name="email" type="email" class="input" placeholder="you@example.com" required value={form?.email ?? ''} />
+        <input id="email" name="email" type="email" class="input" placeholder="Email" required value={form?.email ?? ''} />
       </div>
 
       <div class="form-group">

@@ -43,7 +43,7 @@ export async function initializeDatabase(): Promise<void> {
 			phone VARCHAR(50) NOT NULL,
 			booking_date DATE NOT NULL,
 			event_date DATE NOT NULL,
-			status ENUM('Pending', 'Client Selection', 'Editing', 'Delivered') DEFAULT 'Pending',
+			status ENUM('Pending', 'File Selection', 'Editing', 'Delivered') DEFAULT 'Pending',
 			total_price DECIMAL(12,2) NOT NULL DEFAULT 0,
 			prepayment DECIMAL(12,2) NOT NULL DEFAULT 0,
 			remaining_amount DECIMAL(12,2) GENERATED ALWAYS AS (total_price - prepayment) STORED,

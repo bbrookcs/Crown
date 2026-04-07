@@ -24,6 +24,8 @@ export const actions: Actions = {
     const phone  = get('phone');
     const bdate  = get('booking_date');
     const edate  = get('event_date');
+    const eloc   = get('event_location');
+    const categoriesStr = get('categories') || null;
     const status = get('status');
     const total  = parseFloat(get('total_price')  || '0');
     const pre    = parseFloat(get('prepayment')   || '0');
@@ -36,10 +38,10 @@ export const actions: Actions = {
       return fail(400, { error: 'Please fill all required fields.' });
 
     await query(`UPDATE events SET
-      groom_name=?,bride_name=?,phone=?,booking_date=?,event_date=?,status=?,
+      groom_name=?,bride_name=?,phone=?,booking_date=?,event_date=?,event_location=?,categories=?,status=?,
       total_price=?,prepayment=?,final_payment_status=?,
       storage_disk_number=?,backup_disk_number=?,notes=? WHERE id=?`,
-      [groom,bride,phone,bdate,edate,status,total,pre,fps,disk,bkp,notes,id]);
+      [groom,bride,phone,bdate,edate,eloc || null,categoriesStr,status,total,pre,fps,disk,bkp,notes,id]);
 
     throw redirect(302, `/events/${id}`);
   }

@@ -36,6 +36,6 @@ export const actions: Actions = {
       VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [groom,bride,phone,bdate,edate,status,total,pre,fps,disk,bkp,notes,user.userId]);
 
-    throw redirect(302, `/events/${r.insertId}`);
+    throw redirect(302, `/admin/events/${r.insertId}`);
   }
 };

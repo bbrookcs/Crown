@@ -10,7 +10,7 @@ export const PATCH: RequestHandler = async (event) => {
 	const id = parseInt(event.params.id);
 	const { status } = await event.request.json();
 
-	const validStatuses = ['Pending', 'Client Selection', 'Editing', 'Delivered'];
+	const validStatuses = ['Pending', 'File Selection', 'Editing', 'Delivered'];
 	if (!validStatuses.includes(status)) throw error(400, 'Invalid status');
 
 	await query('UPDATE events SET status = ? WHERE id = ?', [status, id]);

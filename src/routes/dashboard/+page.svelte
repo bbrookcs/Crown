@@ -12,7 +12,7 @@
     d ? new Date(d).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '—';
 
   const statusClass: Record<string,string> = {
-    'Pending':'badge-pending','Client Selection':'badge-selection',
+    'Pending':'badge-pending','File Selection':'badge-selection',
     'Editing':'badge-editing','Delivered':'badge-delivered'
   };
 
@@ -21,7 +21,7 @@
     { label:'Upcoming (30 days)', value: stats.upcoming,  sub:'Wedding events ahead',   color:'rgba(88,86,214,0.08)',   tc:'#5856D6' },
     { label:'In Editing',         value: stats.editing,   sub:'Currently being edited', color:'rgba(255,149,0,0.09)',   tc:'#FF9500' },
     { label:'Delivered',          value: stats.delivered, sub:'Successfully delivered', color:'rgba(52,199,89,0.09)',   tc:'#34C759' },
-    { label:'Client Selection',   value: stats.selection, sub:'Awaiting client review', color:'rgba(88,86,214,0.08)',   tc:'#5856D6' },
+    { label:'File Selection',   value: stats.selection, sub:'Awaiting client review', color:'rgba(88,86,214,0.08)',   tc:'#5856D6' },
     { label:'Pending Payments',   value: stats.unpaid,    sub:'Delivered & unpaid',      color:'rgba(255,59,48,0.08)',   tc:'#FF3B30' },
   ]);
 </script>
@@ -73,7 +73,7 @@
       <div style="font-size:13px;font-weight:700;letter-spacing:-0.02em;margin-bottom:18px">Pipeline</div>
       {#each [
         {label:'Pending',          v:stats.pending,   c:'#FF9500'},
-        {label:'Client Selection', v:stats.selection, c:'#5856D6'},
+        {label:'File Selection', v:stats.selection, c:'#5856D6'},
         {label:'Editing',          v:stats.editing,   c:'#FF9500'},
         {label:'Delivered',        v:stats.delivered, c:'#34C759'},
       ] as row}
