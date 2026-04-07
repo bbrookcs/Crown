@@ -33,9 +33,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	const path = event.url.pathname;
 	const isAuthRoute = path.startsWith('/auth');
-	const isApiRoute = path.startsWith('/api');
+	const isAdminRoute = path.startsWith('/admin');
 
-	if (!isAuthRoute && !isApiRoute && !user) {
+	// Protect only /admin routes
+	if (isAdminRoute && !user) {
 		throw redirect(302, '/auth/login');
 	}
 
