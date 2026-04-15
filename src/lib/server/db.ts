@@ -43,6 +43,8 @@ export async function initializeDatabase(): Promise<void> {
 			phone VARCHAR(50) NOT NULL,
 			booking_date DATE NOT NULL,
 			event_date DATE NOT NULL,
+			event_location VARCHAR(255),
+			categories TEXT,
 			status ENUM('Pending', 'File Selection', 'Editing', 'Delivered') DEFAULT 'Pending',
 			total_price DECIMAL(12,2) NOT NULL DEFAULT 0,
 			prepayment DECIMAL(12,2) NOT NULL DEFAULT 0,
@@ -69,6 +71,40 @@ export async function initializeDatabase(): Promise<void> {
 			description VARCHAR(500),
 			uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+		)
+	`);
+
+	console.log('Database initialized successfully');
+
+	await query(`
+		CREATE TABLE IF NOT EXISTS ai_conversations (
+			id INT AUTO_INCREMENT PRIMARY KEY,
+			user_id INT NOT NULL,
+			title VARCHAR(255) DEFAULT 'New Conversation',
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)
+	`);
+
+	await query(`
+		CREATE TABLE IF NOT EXISTS ai_messages (
+			id INT AUTO_INCREMENT PRIMARY KEY,
+			conversation_id INT NOT NULL,
+			role ENUM('user', 'model') NOT NULL,
+			content LONGTEXT NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (conversation_id) REFERENCES ai_conversations(id) ON DELETE CASCADE
+		)
+	`);
+
+	await query(`
+		CREATE TABLE IF NOT EXISTS ai_global_memories (
+			id INT AUTO_INCREMENT PRIMARY KEY,
+			user_id INT NOT NULL,
+			content TEXT NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 		)
 	`);
 

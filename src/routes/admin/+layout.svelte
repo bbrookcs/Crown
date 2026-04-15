@@ -1,10 +1,10 @@
 <script lang="ts">
   import '../../app.css';
-  import { page } from '$app/stores';
+  import { page, navigating } from '$app/stores';
   import { goto } from '$app/navigation';
 
   let { children } = $props();
-
+  let Tsdf = $state(true);
   const user = $derived($page.data.user);
   const path = $derived($page.url.pathname as string);
   const isAuth = $derived(path.startsWith('/auth'));
@@ -15,7 +15,6 @@
     { href: '/admin/users',     label: 'Users'     },
     { href: '/admin/profile',   label: 'Profile'   },
   ];
-
   const active = (href: string) =>
     href === '/admin/dashboard' ? path === '/admin/dashboard' : path.startsWith(href);
 
@@ -124,9 +123,106 @@
 
   <!-- MAIN -->
   <div class="main">
+    {#if $navigating}
+      <div class="loading-backdrop">
+        <div class="loading-center">
+          <div class="loading-ring"></div>
+          <div class="loading-icon">
+            <!-- Film / video camera icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="23 7 16 12 23 17 23 7"/>
+              <rect x="1" y="5" width="15" height="14" rx="2"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    {/if}
     {@render children()}
   </div>
 </div>
+
+<style>
+  .loading-backdrop {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(1px);
+    pointer-events: all;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .loading-center {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+  }
+
+  /* Outer spinning ring */
+  .loading-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    border-top-color: var(--blue);
+    border-right-color: var(--blue);
+    animation: ring-spin 0.9s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Pulsing halo behind the ring */
+  .loading-ring::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 1px solid var(--blue);
+    opacity: 0.2;
+    animation: halo-pulse 1.4s ease-in-out infinite;
+  }
+
+  /* Inner icon box */
+  .loading-icon {
+    width: 44px;
+    height: 44px;
+    background: var(--surface);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    animation: icon-bounce 1.4s ease-in-out infinite;
+  }
+
+  .loading-icon svg {
+    width: 22px;
+    height: 22px;
+    color: var(--blue);
+  }
+
+  @keyframes ring-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes halo-pulse {
+    0%, 100% { transform: scale(1);   opacity: 0.15; }
+    50%       { transform: scale(1.1); opacity: 0.3;  }
+  }
+
+  @keyframes icon-bounce {
+    0%, 100% { transform: scale(1);    }
+    50%       { transform: scale(1.06); }
+  }
+
+  @keyframes top-bar-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+</style>
 
 {:else}
   {@render children()}

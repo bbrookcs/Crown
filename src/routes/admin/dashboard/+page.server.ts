@@ -23,8 +23,8 @@ export const load: PageServerLoad = async (event) => {
   const s = rows[0] as any;
 
   const recent = await query<any[]>(`
-    SELECT id, groom_name, bride_name, event_date, status, total_price, remaining_amount
-    FROM events ORDER BY created_at DESC LIMIT 6`);
+    SELECT id, groom_name, bride_name, event_date, categories, status, total_price, remaining_amount
+    FROM events`);
 
   return {
     stats: {

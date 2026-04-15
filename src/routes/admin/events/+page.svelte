@@ -6,6 +6,19 @@
   let { data }: { data: PageData } = $props();
   const isAdmin = $derived($page.data.user?.role === 'admin');
 
+  // Sort events: upcoming soonest first, then past events newest first
+  const sortedEvents = $derived([...data.events].sort((a, b) => {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const da = new Date(getNextEventDate(a));
+    const db = new Date(getNextEventDate(b));
+    const aFuture = da >= today;
+    const bFuture = db >= today;
+    if (aFuture && !bFuture) return -1;
+    if (!aFuture && bFuture) return 1;
+    if (aFuture && bFuture) return da.getTime() - db.getTime(); // soonest first
+    return db.getTime() - da.getTime(); // most recent past first
+  }));
+
   let search       = $state(data.search  || '');
   let filterStatus = $state(data.status  || '');
 
@@ -24,12 +37,12 @@
   /* ── Filters ────────────────────────────────── */
   function applyFilters() {
     const q = new URLSearchParams();
-    if (search.trim())  q.set('search', search.trim());
-    if (filterStatus)   q.set('status', filterStatus);
+    if (search.trim())       q.set('search', search.trim());
+    if (filterStatus)        q.set('status', filterStatus);
     goto(`/admin/events${q.toString() ? '?' + q : ''}`, { replaceState: true, invalidateAll: true });
   }
   function onSearchInput() { clearTimeout(searchTimer); searchTimer = setTimeout(applyFilters, 380); }
-  function onStatusFilterChange() { applyFilters(); }
+  function onFilterChange() { applyFilters(); }
   function clearFilters() { search = ''; filterStatus = ''; goto('/admin/events', { replaceState: true, invalidateAll: true }); }
 
   /* ── Status dropdown per-status rules ───────── */
@@ -93,6 +106,34 @@
   const fmtNum  = (n: number) => n != null ? new Intl.NumberFormat('en-US', { minimumFractionDigits: 0 }).format(n) : '—';
   const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
   const hasFilters = $derived(!!(data.search || data.status));
+
+  function getNextEventDate(ev: any) {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    const dates: string[] = [];
+    if (ev.event_date) dates.push(ev.event_date);
+    
+    if (ev.categories) {
+      try {
+        const cats = typeof ev.categories === 'string' ? JSON.parse(ev.categories) : ev.categories;
+        if (Array.isArray(cats)) {
+          cats.forEach(c => { if (c.date) dates.push(c.date); });
+        }
+      } catch(e) {}
+    }
+    
+    if (dates.length === 0) return ev.event_date;
+    
+    // Sort unique dates
+    const sorted = Array.from(new Set(dates)).sort();
+    
+    // Find first date that hasn't passed
+    const next = sorted.find(d => new Date(d) >= today);
+    
+    // If all passed, return the latest one. If all future, return soonest.
+    return next || sorted[sorted.length - 1];
+  }
 </script>
 
 <svelte:head><title>Events — Crown Wedding Films</title></svelte:head>
@@ -134,12 +175,10 @@
     <span style="font-size:13px;font-weight:400;color:var(--ink-3);margin-left:8px">{data.events.length} results</span>
   </div>
   <div class="topbar-right">
-    {#if isAdmin}
     <a href="/admin/events/new" class="btn btn-primary">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       New Event
     </a>
-    {/if}
   </div>
 </div>
 
@@ -147,23 +186,23 @@
 
   <!-- Filter bar -->
   <div class="card" style="padding:12px 16px;margin-bottom:16px">
-    <div class="search-row">
-      <div class="search-box">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input class="input" placeholder="Search couple or phone…" bind:value={search} oninput={onSearchInput} />
-      </div>
-
-      <select class="select" style="width:190px" bind:value={filterStatus} onchange={onStatusFilterChange}>
+    <div class="search-row" style="display:flex; gap:12px; align-items:center;">
+      <select class="select" style="width:130px; flex-shrink:0;" bind:value={filterStatus} onchange={onFilterChange}>
         <option value="">All Statuses</option>
         {#each ['Pending','File Selection','Editing','Delivered'] as s}
           <option value={s}>{s}</option>
         {/each}
       </select>
 
+      <div class="search-box" style="flex:1; min-width:0;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input class="input" placeholder="Search couple or phone…" bind:value={search} oninput={onSearchInput} style="width:100%" />
+      </div>
+
       {#if hasFilters}
-        <button class="btn btn-ghost btn-sm" onclick={clearFilters} style="gap:5px">
+        <button class="btn btn-ghost btn-sm" onclick={clearFilters} style="gap:5px; flex-shrink:0;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:13px;height:13px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           Clear
         </button>
@@ -188,13 +227,13 @@
     </div>
   {:else}
     <div class="table-wrap">
-      <table>
+      <table class="responsive-table">
         <thead>
           <tr>
             <th>#</th>
             <th>Couple</th>
-            <th>Category</th>
-            <th>Wedding Date</th>
+            <th class="mobile-hide">Category</th>
+            <th>Event Date</th>
             <th>Status</th>
             <th>Total Payment</th>
             <th>Remaining</th>
@@ -203,30 +242,43 @@
           </tr>
         </thead>
         <tbody>
-          {#each data.events as ev, i}
+          {#each sortedEvents as ev, i}
             {@const isDelivered = ev.status === 'Delivered'}
             {@const opts = getStatusOptions(ev.status)}
             {@const catObj = typeof ev.categories === 'string' ? (JSON.parse(ev.categories || '[]') || []) : (ev.categories || [])}
-            {@const catNames = Array.isArray(catObj) ? catObj.map((c: any) => typeof c === 'string' ? c : c.name).join(', ') : ''}
+            {@const cats = Array.isArray(catObj) ? catObj.map((c: any) => typeof c === 'string' ? c : c.name) : []}
             <tr>
-              <td style="color:var(--ink-3);font-size:12px;width:36px">{i + 1}</td>
+              <td data-label="#" style="color:var(--ink-3);font-size:12px;width:36px">{i + 1}</td>
 
               <!-- Couple -->
-              <td>
-                <div style="font-weight:600">{ev.groom_name} &amp; {ev.bride_name}</div>
-                <div style="font-size:12px;color:var(--ink-3);margin-top:1px">{ev.phone}</div>
+              <td data-label="Couple">
+                <div style="text-align: right;">
+                  <div style="font-weight:600">{ev.groom_name} &amp; {ev.bride_name}</div>
+                  <div style="font-size:12px;color:var(--ink-3);margin-top:1px">{ev.phone}</div>
+                </div>
               </td>
 
               <!-- Category -->
-              <td style="color:var(--ink-2);max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title={catNames}>
-                {catNames || '—'}
+              <td class="mobile-hide" data-label="Category" title={cats.join(', ')}>
+                <div style="text-align: right;">
+                  {#if cats.length > 0}
+                    <div style="font-weight:500;color:var(--ink-2)">{cats[0]}</div>
+                    {#if cats.length > 1}
+                      <div style="font-size:12px;color:var(--ink-3);margin-top:1px;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                        {cats.slice(1).join(', ')}
+                      </div>
+                    {/if}
+                  {:else}
+                    <span style="color:var(--ink-3)">—</span>
+                  {/if}
+                </div>
               </td>
 
               <!-- Date -->
-              <td style="color:var(--ink-2);white-space:nowrap">{fmtDate(ev.event_date)}</td>
+              <td data-label="Event Date" style="color:var(--ink-2);white-space:nowrap">{fmtDate(getNextEventDate(ev))}</td>
 
               <!-- Status — clickable if not Delivered or Pending -->
-              <td>
+              <td data-label="Status">
                 {#if isDelivered || ev.status === 'Pending'}
                   <!-- Delivered or Pending: just a static badge, no dropdown -->
                   <span class="badge badge-delivered">{ev.status}</span>
@@ -245,12 +297,12 @@
               </td>
 
               <!-- Total (hidden for Delivered) -->
-              <td style="font-weight:600;color:var(--ink)">
+              <td data-label="Total Payment" class:mobile-hide={isDelivered} style="font-weight:600;color:var(--ink)">
                 {#if !isDelivered}{fmtNum(ev.total_price)}{:else}<span style="color:var(--ink-3)">—</span>{/if}
               </td>
 
               <!-- Remaining (hidden for Delivered) -->
-              <td style="font-weight:600">
+              <td data-label="Remaining" class:mobile-hide={isDelivered} style="font-weight:600">
                 {#if !isDelivered}
                   <span style="color:{Number(ev.remaining_amount) > 0 ? 'var(--red)' : 'var(--green)'}">
                     {fmtNum(ev.remaining_amount)}
@@ -261,12 +313,12 @@
               </td>
 
               <!-- Storage -->
-              <td style="color:var(--ink-2);white-space:nowrap">
+              <td data-label="Storage" class:mobile-hide={!ev.storage_disk_number} style="color:var(--ink-2);white-space:nowrap">
                 {ev.storage_disk_number || '—'}
               </td>
 
               <!-- Actions -->
-              <td>
+              <td data-label="Actions">
                 <div class="actions">
                   <a href="/admin/events/{ev.id}" class="btn btn-ghost btn-icon" title="View">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">

@@ -5,9 +5,9 @@ import { requireAuth } from '$lib/server/auth';
 export const load: PageServerLoad = async (event) => {
   requireAuth(event);
   const { url } = event;
-  const search  = url.searchParams.get('search')  || '';
-  const status  = url.searchParams.get('status')  || '';
-  const payment = url.searchParams.get('payment') || '';
+  const search      = url.searchParams.get('search')      || '';
+  const status      = url.searchParams.get('status')      || '';
+  const payment     = url.searchParams.get('payment')     || '';
 
   await query(`UPDATE events SET status='File Selection'
     WHERE status='Pending' AND event_date < CURDATE()`);
@@ -17,11 +17,15 @@ export const load: PageServerLoad = async (event) => {
     categories, storage_disk_number, backup_disk_number FROM events WHERE 1=1`;
   const p: string[] = [];
 
-  if (search)  { sql += ` AND (groom_name LIKE ? OR bride_name LIKE ? OR phone LIKE ?)`; const s=`%${search}%`; p.push(s,s,s); }
-  if (status)  { sql += ` AND status=?`;               p.push(status); }
-  if (payment) { sql += ` AND final_payment_status=?`; p.push(payment); }
+  if (search)      { sql += ` AND (groom_name LIKE ? OR bride_name LIKE ? OR phone LIKE ?)`; const s=`%${search}%`; p.push(s,s,s); }
+  if (status)      { sql += ` AND status=?`;               p.push(status); }
+  if (payment)     { sql += ` AND final_payment_status=?`; p.push(payment); }
 
-  sql += ` ORDER BY event_date DESC`;
+  sql += ` ORDER BY 
+    CASE WHEN event_date >= CURDATE() THEN 0 ELSE 1 END,
+    CASE WHEN event_date >= CURDATE() THEN event_date END ASC,
+    event_date DESC, id DESC`;
+  
   const events = await query<any[]>(sql, p);
   return { events, search, status, payment };
 };

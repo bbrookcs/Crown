@@ -64,7 +64,7 @@
     </div>
   {:else}
     <div class="table-wrap">
-      <table>
+      <table class="responsive-table">
         <thead>
           <tr>
             <th>Name</th>
@@ -77,17 +77,17 @@
         <tbody>
           {#each data.users as u (u.id)}
             <tr>
-              <td>
+              <td data-label="Name">
                 <div style="font-weight:600">{u.name}</div>
               </td>
-              <td style="color:var(--ink-2)">{u.email}</td>
-              <td>
+              <td data-label="Email" style="color:var(--ink-2)">{u.email}</td>
+              <td data-label="Role">
                 <span class="badge" style="background:var(--surface-3);color:var(--ink)">
                   {u.role.charAt(0).toUpperCase() + u.role.slice(1)}
                 </span>
               </td>
-              <td style="color:var(--ink-2);white-space:nowrap">{fmtDate(u.created_at)}</td>
-              <td>
+              <td data-label="Added On" style="color:var(--ink-2);white-space:nowrap">{fmtDate(u.created_at)}</td>
+              <td data-label="Actions">
                 <div class="actions">
                   <button class="btn btn-danger btn-icon" title="Delete User" onclick={() => delId = u.id}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">

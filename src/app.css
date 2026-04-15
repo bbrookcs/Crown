@@ -284,7 +284,9 @@ a { color: var(--blue); text-decoration: none; }
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-xl);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
   box-shadow: var(--sh-xs);
 }
 
@@ -475,10 +477,84 @@ tbody td { padding: 13px 16px; color: var(--ink); vertical-align: middle; }
 
 /* ── RESPONSIVE ───────────────────────────────── */
 @media (max-width: 768px) {
-  :root { --sidebar-w: 0px; }
-  .sidebar { transform: translateX(-100%); width: 230px; }
-  .sidebar.open { transform: none; }
-  .main { margin-left: 0; }
+  :root { --sidebar-w: 0px; --bottom-nav-h: 65px; }
+  
+  .sidebar { 
+    transform: none; 
+    width: 100%; 
+    height: var(--bottom-nav-h);
+    top: auto; 
+    bottom: 0;
+    flex-direction: row;
+    border-right: none;
+    border-top: 1px solid var(--border);
+    padding: 0;
+    justify-content: space-between;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom, 0px); /* iPhone home indicator support */
+    box-sizing: content-box;
+  }
+  
+  .sidebar-logo, .sidebar-bottom, .nav-label { 
+    display: none !important; 
+  }
+  
+  .sidebar-nav {
+    flex-direction: row;
+    padding: 0;
+    width: 100%;
+    overflow: visible;
+    gap: 0;
+  }
+  
+  .nav-item {
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 4px;
+    font-size: 10px;
+    flex: 1;
+    justify-content: center;
+    border-radius: 0;
+    text-align: center;
+  }
+  
+  .nav-item svg { width: 22px; height: 22px; margin: 0 auto; }
+  .nav-item:hover, .nav-item.active { background: transparent !important; }
+  
+  .responsive-table thead { display: none; }
+  .responsive-table tbody tr {
+    display: block;
+    padding: 12px 16px;
+    border-bottom: 2px solid var(--surface-3);
+  }
+  .responsive-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border: none;
+    text-align: right;
+  }
+  .responsive-table tbody td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-right: auto;
+  }
+  .responsive-table td .actions {
+    justify-content: flex-end;
+  }
+  .mobile-hide {
+    display: none !important;
+  }
+
+  .main { 
+    margin-left: 0; 
+    padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px)); 
+  }
+
   .form-grid, .form-grid-3 { grid-template-columns: 1fr; }
   .page { padding: 16px; }
   .topbar { padding: 0 16px; }

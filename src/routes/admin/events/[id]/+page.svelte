@@ -255,11 +255,11 @@
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;background:var(--surface-2);padding:12px;border-radius:var(--r-md);border:1px solid var(--border)">
               <div>
                 <label class="form-label" style="font-size:10px">File Save Disk</label>
-                <input type="text" class="input" style="padding:6px 10px;font-size:13px" bind:value={editStorageVal} placeholder="e.g. HDD-01" />
+                <input type="text" class="input" style="padding:6px 10px;font-size:13px" bind:value={editStorageVal} placeholder="e.g. C-01" />
               </div>
               <div>
                 <label class="form-label" style="font-size:10px">Backup Disk</label>
-                <input type="text" class="input" style="padding:6px 10px;font-size:13px" bind:value={editBackupVal} placeholder="e.g. BKP-01" />
+                <input type="text" class="input" style="padding:6px 10px;font-size:13px" bind:value={editBackupVal} placeholder="e.g. C-07" />
               </div>
               <div style="grid-column:1/-1;display:flex;justify-content:flex-end;gap:6px">
                 <button class="btn btn-ghost btn-sm" onclick={() => editingStorage = false}>Cancel</button>
@@ -350,7 +350,7 @@
                     <div style="font-size:12px;color:var(--ink-3)">PDF files only</div>
                   {/if}
                 </label>
-                <input id="pdfUpload" type="file" accept=".pdf" style="display:none" onchange={uploadPDF} />
+                <input id="pdfUpload" type="file" accept=".pdf" style="position:absolute;opacity:0;width:0.1px;height:0.1px;z-index:-1;" onchange={uploadPDF} />
               </div>
             </div>
           {/if}

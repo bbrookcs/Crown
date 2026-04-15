@@ -5,6 +5,7 @@
   
   let { form }: { form: any } = $props();
   let loading = $state(false);
+  let showChangePassword = $state(false);
 
   const user = $derived($page.data.user);
 
@@ -24,7 +25,7 @@
   <div class="topbar-title" style="margin: 0 auto;">Profile Settings</div>
 </div>
 
-<div class="page" style="max-width: 560px; margin: 40px auto; width: 100%; display: flex; flex-direction: column; gap: 24px;">
+<div class="page" style="max-width: 560px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 16px; padding: 24px 16px;">
 
   <!-- Profile Card -->
   <div class="section-card">
@@ -45,8 +46,26 @@
 
   <!-- Security Card -->
   <div class="section-card">
-    <div class="section-head"><span class="section-title">Change Password</span></div>
-    <div class="section-body">
+    <div class="section-head" style="display:flex;justify-content:space-between;align-items:center">
+      <span class="section-title">Security</span>
+      <button
+        class="btn btn-ghost btn-sm"
+        onclick={() => showChangePassword = !showChangePassword}
+        style="display:flex;align-items:center;gap:6px;font-size:13px;"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        Change Password
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:12px;height:12px;transition:transform 200ms;transform:{showChangePassword ? 'rotate(180deg)' : 'rotate(0deg)'}">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+    </div>
+
+    {#if showChangePassword}
+    <div class="section-body" style="border-top:1px solid var(--border);padding-top:16px;">
       {#if form?.error}
         <div class="alert alert-error" style="margin-bottom:16px">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -60,16 +79,17 @@
         </div>
       {/if}
 
-      <form method="POST" class="form-grid" style="grid-template-columns:1fr" use:enhance={()=>{loading=true;return async({update})=>{loading=false;await update({reset:form?.success});}}}>
+      <form method="POST" class="form-grid" style="grid-template-columns:1fr" use:enhance={()=>{loading=true;return async({update})=>{loading=false;await update({reset:form?.success});if(form?.success)showChangePassword=false;}}}>
         <div class="form-group">
           <label class="form-label" for="current_password">Current Password</label>
-          <input id="current_password" name="current_password" type="password" class="input" required />
+          <input id="current_password" name="current_password" type="password" class="input" required autocomplete="current-password" />
         </div>
         <div class="form-group">
           <label class="form-label" for="new_password">New Password</label>
-          <input id="new_password" name="new_password" type="password" class="input" required minlength="6" />
+          <input id="new_password" name="new_password" type="password" class="input" required minlength="6" autocomplete="new-password" />
         </div>
-        <div style="display:flex;justify-content:flex-end;margin-top:8px">
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button type="button" class="btn btn-ghost" onclick={() => showChangePassword = false}>Cancel</button>
           <button type="submit" class="btn btn-primary" disabled={loading}>
             {#if loading}<span class="spin"></span>{/if}
             {loading ? 'Saving…' : 'Update Password'}
@@ -77,6 +97,7 @@
         </div>
       </form>
     </div>
+    {/if}
   </div>
 
   <!-- Logout Button -->

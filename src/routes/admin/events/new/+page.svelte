@@ -453,7 +453,7 @@
                 <span style="font-size:12.5px;color:var(--ink-2)">Upload PDF</span>
               {/if}
             </label>
-            <input id="pdfInput" type="file" accept=".pdf" style="display:none" onchange={e => { pdfFile = (e.target as HTMLInputElement).files?.[0] || null; }} />
+            <input id="pdfInput" type="file" accept=".pdf" style="position:absolute;opacity:0;width:0.1px;height:0.1px;z-index:-1;" onchange={e => { pdfFile = (e.target as HTMLInputElement).files?.[0] || null; }} />
           </div>
 
           <div class="form-group">
@@ -467,7 +467,7 @@
                 <span style="font-size:12.5px;color:var(--ink-2)">Upload receipt</span>
               {/if}
             </label>
-            <input id="rcptInput" type="file" accept="image/*,.pdf" style="display:none" onchange={e => { receiptFile = (e.target as HTMLInputElement).files?.[0] || null; }} />
+            <input id="rcptInput" type="file" accept="image/*,.pdf" style="position:absolute;opacity:0;width:0.1px;height:0.1px;z-index:-1;" onchange={e => { receiptFile = (e.target as HTMLInputElement).files?.[0] || null; }} />
           </div>
         </div>
 

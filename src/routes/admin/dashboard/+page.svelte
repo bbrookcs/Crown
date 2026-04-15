@@ -16,12 +16,47 @@
     'Editing':'badge-editing','Delivered':'badge-delivered'
   };
 
+  function getNextEventDate(ev: any) {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const dates: string[] = [];
+    if (ev.event_date) dates.push(ev.event_date);
+    if (ev.categories) {
+      try {
+        const cats = typeof ev.categories === 'string' ? JSON.parse(ev.categories) : ev.categories;
+        if (Array.isArray(cats)) cats.forEach(c => { if (c.date) dates.push(c.date); });
+      } catch(e) {}
+    }
+    if (dates.length === 0) return ev.event_date;
+    const sorted = Array.from(new Set(dates)).sort();
+    const next = sorted.find(d => new Date(d) >= today);
+    return next || sorted[sorted.length - 1];
+  }
+
+  const sortedRecent = $derived([...recent].sort((a, b) => {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const da = new Date(getNextEventDate(a));
+    const db = new Date(getNextEventDate(b));
+    const aFuture = da >= today;
+    const bFuture = db >= today;
+    if (aFuture && !bFuture) return -1;
+    if (!aFuture && bFuture) return 1;
+    if (aFuture && bFuture) return da.getTime() - db.getTime();
+    return db.getTime() - da.getTime();
+  }).slice(0, 6));
+
+  const upcomingCount = $derived(recent.filter((ev: any) => {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const in30Days = new Date(today); in30Days.setDate(today.getDate() + 30);
+    const d = new Date(getNextEventDate(ev));
+    return d >= today && d <= in30Days;
+  }).length);
+
   const cards = $derived([
     { label:'Total Events',       value: stats.total,     sub:'All bookings',           color:'rgba(0,113,227,0.08)',   tc:'#0071E3' },
-    { label:'Upcoming (30 days)', value: stats.upcoming,  sub:'Wedding events ahead',   color:'rgba(88,86,214,0.08)',   tc:'#5856D6' },
+    { label:'Upcoming (30 days)', value: upcomingCount,   sub:'Wedding events ahead',   color:'rgba(88,86,214,0.08)',   tc:'#5856D6' },
     { label:'In Editing',         value: stats.editing,   sub:'Currently being edited', color:'rgba(255,149,0,0.09)',   tc:'#FF9500' },
-    { label:'Delivered',          value: stats.delivered, sub:'Successfully delivered', color:'rgba(52,199,89,0.09)',   tc:'#34C759' },
-    { label:'File Selection',   value: stats.selection, sub:'Awaiting client review', color:'rgba(88,86,214,0.08)',   tc:'#5856D6' },
+    { label:'File Selection',     value: stats.selection, sub:'Awaiting client review', color:'rgba(88,86,214,0.08)',   tc:'#5856D6' },
   ]);
 </script>
 
@@ -48,7 +83,7 @@
   </div>
 
   <!-- Stat grid -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:12px;margin-bottom:24px">
+  <div class="dashboard-stats">
     {#each cards as c}
       <div class="stat-card">
         <div class="stat-icon-wrap" style="background:{c.color}">
@@ -65,7 +100,7 @@
   </div>
 
   <!-- Bottom row -->
-  <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:16px">
+  <div class="dashboard-bottom">
 
     <!-- Pipeline -->
     <div class="card">
@@ -91,11 +126,11 @@
     <!-- Recent Events -->
     <div class="table-wrap">
       <div style="padding:14px 18px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:13px;font-weight:700;letter-spacing:-0.02em">Recent Events</span>
-        <a href="/admin/events" class="btn btn-ghost btn-sm">View all</a>
+        <span class="mobile-hide" style="font-size:13px;font-weight:700;letter-spacing:-0.02em">Upcoming Events</span>
+        <a href="/admin/events" class="btn btn-ghost btn-sm" style="margin-left: auto;">View all</a>
       </div>
 
-      {#if recent.length === 0}
+      {#if sortedRecent.length === 0}
         <div class="empty">
           <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <h3>No events yet</h3>
@@ -103,23 +138,29 @@
           <a href="/admin/events/new" class="btn btn-primary" style="margin-top:14px">New Event</a>
         </div>
       {:else}
-        <table>
+        <table class="responsive-table">
           <thead>
             <tr>
-              <th>Couple</th><th>Wedding Date</th><th>Status</th>
+              <th>Couple</th><th>Event Date</th><th>Status</th>
               <th>Total</th><th>Remaining</th>
             </tr>
           </thead>
           <tbody>
-            {#each recent as ev}
+            {#each sortedRecent as ev}
               <tr onclick={() => window.location.href=`/admin/events/${ev.id}`} style="cursor:pointer">
-                <td style="font-weight:600">{ev.groom_name} & {ev.bride_name}</td>
-                <td style="color:var(--ink-2)">{fmtDate(ev.event_date)}</td>
-                <td><span class="badge {statusClass[ev.status]}">{ev.status}</span></td>
-                <td style="font-weight:600">{fmt(ev.total_price)}</td>
-                <td style="font-weight:600;color:{Number(ev.remaining_amount)>0?'var(--red)':'var(--green)'}">
-                  {fmt(ev.remaining_amount)}
-                </td>
+                <td data-label="Couple" style="font-weight:600">{ev.groom_name} & {ev.bride_name}</td>
+                <td data-label="Event Date" style="color:var(--ink-2)">{fmtDate(getNextEventDate(ev))}</td>
+                <td data-label="Status"><span class="badge {statusClass[ev.status]}">{ev.status}</span></td>
+                
+                {#if ev.status === 'Delivered'}
+                  <td class="mobile-hide" data-label="Total" style="font-weight:600;color:var(--ink-3)">—</td>
+                  <td class="mobile-hide" data-label="Remaining" style="font-weight:600;color:var(--ink-3)">—</td>
+                {:else}
+                  <td data-label="Total" style="font-weight:600">{fmt(ev.total_price)}</td>
+                  <td data-label="Remaining" style="font-weight:600;color:{Number(ev.remaining_amount)>0?'#FF9500':'var(--green)'}">
+                    {fmt(ev.remaining_amount)}
+                  </td>
+                {/if}
               </tr>
             {/each}
           </tbody>
@@ -128,3 +169,25 @@
     </div>
   </div>
 </div>
+
+<style>
+  .dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .dashboard-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 16px;
+  }
+  @media (max-width: 768px) {
+    .dashboard-stats {
+      grid-template-columns: 1fr 1fr;
+    }
+    .dashboard-bottom {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
